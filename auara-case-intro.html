@@ -589,6 +589,10 @@
   <div id="page-transition-veil" aria-hidden="true"></div>
 
   <script>
+    /* INTERRUPTOR «REDUCIR MOVIMIENTO» (el mismo que en la página del caso)
+       false (actual): las animaciones se muestran siempre; true: se respeta el ajuste del sistema
+       (aquí solo afecta a la animación de llegada al volver desde el caso). */
+    if (window.AUARA_HONOR_REDUCED_MOTION === undefined) window.AUARA_HONOR_REDUCED_MOTION = false;
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d');
     const heroContainer = document.getElementById('hero-container');
@@ -960,7 +964,7 @@
 
       if (skipIntro) {
         const handoff = returningFromCase ? readHandoff() : null;
-        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const calm = window.AUARA_HONOR_REDUCED_MOTION === true && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const animateReturn = returningFromCase && !calm && !(handoff && handoff.skip);
 
         // Continuidad de las olas con la página del caso

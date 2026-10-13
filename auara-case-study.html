@@ -13,6 +13,15 @@
        Sin entrada animada si la página se abre directamente, con "reducir movimiento"
        o si el usuario pausó la animación en el intro. */
     (function () {
+      /* INTERRUPTOR «REDUCIR MOVIMIENTO»
+         false (actual): las animaciones se muestran SIEMPRE al cargar, aunque el sistema pida reducir movimiento;
+                         el botón de pausa sigue disponible para quien lo necesite.
+         true:           se respeta el ajuste del sistema: la página arranca en pausa, sin entrada en cascada,
+                         sin animar el timeline ni las ondas del ejercicio y con transiciones instantáneas.
+         Un solo sitio: este valor (el intro tiene el mismo interruptor al principio de su script). */
+      if (window.AUARA_HONOR_REDUCED_MOTION === undefined) window.AUARA_HONOR_REDUCED_MOTION = false;
+      var honor = window.AUARA_HONOR_REDUCED_MOTION === true;
+      if (honor) document.documentElement.classList.add('honor-rm');
       var h = null;
       try {
         if (window.__AUARA_HANDOFF) { h = window.__AUARA_HANDOFF; }
@@ -23,7 +32,7 @@
       } catch (e) {}
       window.__AUARA_HANDOFF_DATA = h;
       var fromIntro = window.__AUARA_FROM_INTRO === true || /auara-case-intro/.test(document.referrer || '');
-      var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var calm = honor && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (fromIntro && !calm && !(h && h.skip)) document.documentElement.classList.add('arriving');
     })();
   </script>
@@ -509,8 +518,8 @@
     .field[readonly] { background: #F4F7F7; cursor: default; resize: none; }
     .limit.is-full { color: #B3261E; font-weight: 500; }          /* límite alcanzado (6,5:1 sobre blanco) */
     @media (prefers-reduced-motion: reduce) {
-      #reflection-form[data-state="sent"] .form-done__msg,
-      #reflection-form[data-state="done"] .btn--change { animation: none; }
+      html.honor-rm #reflection-form[data-state="sent"] .form-done__msg,
+      html.honor-rm #reflection-form[data-state="done"] .btn--change { animation: none; }
     }
 
     @media (pointer: coarse) { .btn { min-height: 44px; } }
@@ -656,8 +665,8 @@
     @keyframes vtFadeIn { from { opacity: 0; } }
 
     @media (prefers-reduced-motion: reduce) {
-      ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
-      .btn, .fab { transition: none; }
+      html.honor-rm::view-transition-group(*), html.honor-rm::view-transition-old(*), html.honor-rm::view-transition-new(*) { animation: none !important; }
+      html.honor-rm .btn, html.honor-rm .fab { transition: none; }
     }
   </style>
 </head>
@@ -897,6 +906,8 @@
     const btnPause = document.getElementById('btn-pause');
     const pauseIcon = document.getElementById('pause-icon');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const HONOR_RM = window.AUARA_HONOR_REDUCED_MOTION === true;   // interruptor (ver la cabecera)
+    const motionCalm = () => HONOR_RM && reduceMotion.matches;      // ¿hay que evitar el movimiento?
 
     const BG = '#EEF4F3';
     const MAX_DELTA = 0.05;         // evita saltos al volver de otra pestaña
@@ -1302,7 +1313,7 @@
       if (p) { cover.t = 0; cover.dir = 0; root.classList.remove('arriving'); stopLoop(); drawStill(); } else { startLoop(); }
     }
     btnPause.addEventListener('click', () => setPaused(!paused));
-    reduceMotion.addEventListener('change', (e) => setPaused(e.matches));
+    reduceMotion.addEventListener('change', (e) => { if (HONOR_RM) setPaused(e.matches); });
 
     window.addEventListener('resize', () => resize(false));
     window.addEventListener('orientationchange', () => setTimeout(() => resize(true), 250));
@@ -1311,7 +1322,7 @@
     dropAt = animTime + 1.2;                        // la gota única cae ~1,2 s tras cargar
     drawStill();                                    // primer fotograma dibujado antes del primer pintado: sin parpadeo
     if (arriving) setTimeout(() => root.classList.remove('arriving'), 2800);   // fin de la cascada de entrada
-    setPaused(reduceMotion.matches);
+    setPaused(motionCalm());
 
     /* ========================================================
        3 · EVENTOS PARA CONECTAR CON TU APP
@@ -1383,7 +1394,7 @@
       if (transitioning) return;
       transitioning = true;
       // «Reducir movimiento» (preferencia del sistema): sin animación, directo.
-      if (reduceMotion.matches) {
+      if (motionCalm()) {
         if (href) navigateTo(href, true); else { emit('case:next'); transitioning = false; }
         return;
       }
@@ -1465,7 +1476,7 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAxis);
       if (window.ResizeObserver) new ResizeObserver(fitAxis).observe(list);
 
-      if (reduceMotion.matches || !('IntersectionObserver' in window)) return;
+      if (motionCalm() || !('IntersectionObserver' in window)) return;
       card.classList.add('tl--anim');                    // los hitos parten ocultos
 
       // Los hitos que entran a la vez caen de arriba abajo, escalonados (0,14 s entre cada uno)
@@ -1533,9 +1544,9 @@
     // 3 ondas de impacto de gota sobre las curvas del agua: repartidas por el ancho y escalonadas
     const SUBMIT_WAVES = [{ x: 0.16, at: 0 }, { x: 0.50, at: 180 }, { x: 0.84, at: 360 }];
     function dropWaves() {
-      if (paused || reduceMotion.matches) return;       // sin animación en pausa o con «reducir movimiento»
+      if (paused || motionCalm()) return;               // sin animación en pausa o (si se respeta) con «reducir movimiento»
       SUBMIT_WAVES.forEach(({ x, at }) => setTimeout(() => {
-        if (paused || reduceMotion.matches) return;
+        if (paused || motionCalm()) return;
         const px = width * x;
         waves.push(new DistortionWave(px, curvedSurfaceY(px), 1.25));
       }, at));

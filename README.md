@@ -37,8 +37,8 @@ vuelve al intro con enlaces relativos.
   página ve el tamaño real: los puntos de corte y la posición del agua son los verdaderos.
 - Es una **copia congelada** de las dos páginas en la fecha indicada arriba a la derecha. Si cambian los archivos,
   hay que regenerarla.
-- Muestra siempre las animaciones, aunque el sistema pida *reducir movimiento*. Las páginas reales **sí respetan** esa
-  preferencia; para verla, abre `auara-case-intro.html` con la opción activada en tu sistema operativo.
+- Las animaciones se muestran siempre, también en las páginas reales, aunque el sistema pida *reducir movimiento*
+  (ver «Reducir movimiento» más abajo).
 
 ## Integración
 
@@ -62,6 +62,19 @@ Configuración, en los propios archivos:
 - **Hitos de la línea de tiempo:** elementos `<li class="tl__event">`; alternan solos de lado y el eje se ajusta.
 - **Constantes del script del caso:** `WATER_COVER` y `MEAN_RISE_PX` (nivel del agua), `SENT_MSG_MS` (duración del
   mensaje «Your response has been recorded!»).
+
+## Reducir movimiento (accesibilidad)
+
+Por defecto **las animaciones funcionan siempre al cargar**, aunque el sistema operativo del visitante pida reducir
+movimiento. El botón de pausa del caso sigue disponible para quien lo necesite.
+
+Para **respetar el ajuste del sistema** (la página arranca en pausa, sin entrada en cascada, sin animar el timeline ni
+las ondas del ejercicio, y con transiciones instantáneas) basta con cambiar un valor:
+
+- en `auara-case-study.html`, en el script de la cabecera: `window.AUARA_HONOR_REDUCED_MOTION = false` → `true`
+- en `auara-case-intro.html`, al principio de su script: la misma línea.
+
+Es una decisión de accesibilidad que conviene confirmar con el cliente antes de publicar de verdad.
 
 ## Qué cambia respecto a los archivos entregados
 
